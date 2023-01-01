@@ -2,17 +2,17 @@ fetch("http://localhost:3000/api/products")
     .then (res => res.json())
     .then (data => {
         let items = document.getElementById("items")
-        let productsList = ""
-        data.forEach(item => {
-            productsList += 
-                `<a href="./product.html?id=${item._id}">
+        let product = ""
+        data.forEach(data => {
+            product += 
+                `<a href="./product.html?id=${data._id}">
                 <article>
-                    <img src="${item.imageUrl}" alt="${item.altTxt}">
-                    <h3 class="productName">${item.name}</h3>
-                    <p class="productDescription">${item.description}</p>
+                    <img src="${data.imageUrl}" alt="${data.altTxt}">
+                    <h3 class="productName">${data.name}</h3>
+                    <p class="productDescription">${data.description}</p>
                 </article>
                 </a>`
         });
-        items.innerHTML = productsList
+        items.innerHTML = product
     });
 
