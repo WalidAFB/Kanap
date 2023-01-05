@@ -3,18 +3,19 @@ reload()
 function reload() {
     let itemArr = JSON.parse(window.localStorage.getItem("itemArr")) || [];
     itemArr = itemArr.sort((a, b) => {
-        if (a.url < b.url) {
+        if (a.id < b.id) {
             return -1;
         }
     });
 
     const fetches = itemArr.map((item) => {
-        return fetch(`http://localhost:3000/api/products/${item.url}`)
+        return fetch(`http://localhost:3000/api/products/${item.id}`)
             .then (res => res.json())
             .then (data =>  {
             item.data = data
             return item
             })
+            
     })
 
     Promise.all(fetches)
@@ -35,7 +36,7 @@ function createCartItem(item, index) {
     
     const article = document.createElement("article")
     article.className = "cart__item"
-    article.setAttribute("data-id",item.url)
+    article.setAttribute("data-id",item.id)
     article.setAttribute("data-color",item.color)
     article.innerHTML = ` 
         <div class="cart__item__img">
@@ -59,33 +60,37 @@ function createCartItem(item, index) {
         </div>`;
         
     article.querySelector(`#deleteItem-${index}`).addEventListener("click", () => {
-        deleteProductInCart(item.url, item.color)
+        deleteProductInCart(item.id, item.color)
         reload()
     })
 
-    article.querySelector(`#itemQuantity-${index}`).addEventListener("change", () => {
-        var array = JSON.parse(window.localStorage.getItem("itemArr"));
-        const indexOfItem = array.findIndex((cartItem) => cartItem.url == item.url && cartItem.color == item.color)
-        if (indexOfItem >= 0) {
-            array[indexOfItem].quantity = parseInt(document.getElementById(`itemQuantity-${index}`).value)
-        }
-        if (array[indexOfItem].quantity > 100 || array[indexOfItem].quantity <= 0) {
+    article.querySelector(`#itemQuantity-${index}`).addEventListener("change", (event) => {
+        let array = JSON.parse(window.localStorage.getItem("itemArr"));
+        const indexOfItem = array.findIndex((cartItem) => cartItem.id == item.id && cartItem.color == item.color)
+        const quantityValue = document.getElementById(`itemQuantity-${index}`).value
+        const newQuantity = parseInt(quantityValue || 0)
+        if (newQuantity === null || newQuantity > 100 || newQuantity <= 0) { 
             alert("Veuillez choisir une quantité entre 1 et 100")
+            document.getElementById(`itemQuantity-${index}`).value = array[indexOfItem].quantity
         } else {
+            array[indexOfItem].quantity = newQuantity
             localStorage.setItem("itemArr", JSON.stringify(array))
+            reload()
         }
-        reload()
     })
     return article
 }
 
-function deleteProductInCart(itemUrl, itemColor) {
+
+function deleteProductInCart(itemid, itemColor) {
     var array = JSON.parse(window.localStorage.getItem("itemArr"));
     array = array.filter((item) => {
-        return item.url !== itemUrl || item.color !== itemColor
+        return item.id !== itemid || item.color !== itemColor
     })
     window.localStorage.setItem("itemArr", JSON.stringify(array))
 }
+
+deleteProductInCart()
 
 function totalQty (array) {
     const sum = array.reduce((accumulator, object) => {
@@ -101,26 +106,98 @@ function totalPrice (array) {
         document.getElementById("totalPrice").innerText = sum
 }
 
-// form
-
 const firstName = document.getElementById('firstName')
 const firstNameError = document.getElementById('firstNameErrorMsg')
+
+// check if the input value is empty, check if the value match the regex, if false, display an error message, if true, return the checked value
+function checkFisrtName (elt, eltError, regex) {
+    if (elt.value === "") {
+        eltError.innerHTML = "";
+        return;
+    }
+    if (regex.test(elt.value) === false) {
+        elt.value = ""
+        eltError.innerHTML = "Veuillez entrer un prénom valide"
+    } else {
+        return elt.value
+    }
+}
 
 const lastName = document.getElementById('lastName')
 const lastNameError = document.getElementById('lastNameErrorMsg')
 const regexName = /^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]+$/;
 
+// check if the input value is empty, check if the value match the regex, if false, display an error message, if true, return the checked value
+function checkLastName (elt, eltError, regex) {
+    if (elt.value === "") {
+        eltError.innerHTML = "";
+        return;
+    }
+    if (regex.test(elt.value) === false) {
+        elt.value = ""
+        eltError.innerHTML = "Veuillez entrer un nom valide"
+    } else {
+        eltError.innerHTML = ""
+        return elt.value
+    } 
+}
+
 const address = document.getElementById('address')
 const addressError = document.getElementById('addressErrorMsg')
 const regexAddress = /^[0-9]+[a-zA-Z\s,-]+$/;
+
+// check if the input value is empty, check if the value match the regex, if false, display an error message, if true, return the checked value
+function checkAddress (elt, eltError, regex) {
+    if (elt.value === "") {
+        eltError.innerHTML = "";
+        return;
+    }
+    if (regex.test(elt.value) === false) {
+        elt.value = ""
+        eltError.innerHTML = "Veuillez entrer une adresse valide"
+    } else {
+        eltError.innerHTML = ""
+        return elt.value
+    } 
+}
 
 const city = document.getElementById('city')
 const cityError = document.getElementById('cityErrorMsg')
 const regexCity = /^[a-zA-Z\s,-]+$/;
 
+// check if the input value is empty, check if the value match the regex, if false, display an error message, if true, return the checked value
+function checkCity (elt, eltError, regex) {
+    if (elt.value === "") {
+        eltError.innerHTML = "";
+        return;
+    }
+    if (regex.test(elt.value) === false) {
+        elt.value = ""
+        eltError.innerHTML = "Veuillez entrer une ville valide"
+    } else {
+        eltError.innerHTML = ""
+        return elt.value
+    } 
+}
+
 const email = document.getElementById('email')
 const emailError = document.getElementById('emailErrorMsg')
 const regexEmail = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+// check if the input value is empty, check if the value match the regex, if false, display an error message, if true, return the checked value
+function checkEmail (elt, eltError, regex) {
+    if (elt.value === "") {
+        eltError.innerHTML = "";
+        return;
+    }
+    if (regex.test(elt.value) === false) {
+        elt.value = ""
+        eltError.innerHTML = "Veuillez entrer une adresse mail valide"
+    } else {
+        eltError.innerHTML = ""
+        return elt.value
+    } 
+}
 
 // Get the submit button element
 const submitBtn = document.getElementById('order')
@@ -185,8 +262,8 @@ submitBtn.addEventListener("click", (e) => {
         .then((res) => res.json())
         // Use the response data to redirect the user to the confirmation page
         .then((data) => {
-            // Clear the local storage
-            localStorage.clear();
+            // remove the key "itemArr" from the local storage
+            localStorage.removeItem('itemArr');
             // Create the confirmation URL with the order ID
             let confirmationUrl = "./confirmation.html?id=" + data.orderId;
             // Redirect the user to the confirmation page
@@ -195,85 +272,18 @@ submitBtn.addEventListener("click", (e) => {
     }
 })
 
-
-
-function checkFisrtName (elt, eltError, regex) {
-    if (elt.value === "") {
-        eltError.innerHTML = "";
-        return;
-    }
-    if (regex.test(elt.value) === false) {
-        elt.value = ""
-        eltError.innerHTML = "Veuillez entrer un prénom valide"
-    } else {
-        return elt.value
-    }
-}
-
-function checkLastName (elt, eltError, regex) {
-    if (elt.value === "") {
-        eltError.innerHTML = "";
-        return;
-    }
-    if (regex.test(elt.value) === false) {
-        elt.value = ""
-        eltError.innerHTML = "Veuillez entrer un nom valide"
-    } else {
-        eltError.innerHTML = ""
-        return elt.value
-    } 
-}
-
-function checkAddress (elt, eltError, regex) {
-    if (elt.value === "") {
-        eltError.innerHTML = "";
-        return;
-    }
-    if (regex.test(elt.value) === false) {
-        elt.value = ""
-        eltError.innerHTML = "Veuillez entrer une adresse valide"
-    } else {
-        eltError.innerHTML = ""
-        return elt.value
-    } 
-}
-
-function checkCity (elt, eltError, regex) {
-    if (elt.value === "") {
-        eltError.innerHTML = "";
-        return;
-    }
-    if (regex.test(elt.value) === false) {
-        elt.value = ""
-        eltError.innerHTML = "Veuillez entrer une ville valide"
-    } else {
-        eltError.innerHTML = ""
-        return elt.value
-    } 
-}
-
-function checkEmail (elt, eltError, regex) {
-    if (elt.value === "") {
-        eltError.innerHTML = "";
-        return;
-    }
-    if (regex.test(elt.value) === false) {
-        elt.value = ""
-        eltError.innerHTML = "Veuillez entrer une adresse mail valide"
-    } else {
-        eltError.innerHTML = ""
-        return elt.value
-    } 
-}
-
+// exctract the Id values of each object and put it in a new array
 function getIdValues(objectsArray) {
     idValues = [];
     for (let item of objectsArray) {
-    idValues.push(item.url);
+    idValues.push(item.id);
     }
     return idValues;
 }
 
+objectsArray.map(element => element.id)
+
+// removes the duplicates values of an Array
 function removeDuplicates(array) {
     return Array.from(new Set(array));
 }
