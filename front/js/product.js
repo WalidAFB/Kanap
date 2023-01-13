@@ -1,5 +1,7 @@
 const id = new URLSearchParams(window.location.search).get("id")
 
+document.getElementById("quantity").value = 1
+
 fetch(`http://localhost:3000/api/products/${id}`)
 .then (res => res.json())
 .then (data => {
@@ -7,27 +9,26 @@ fetch(`http://localhost:3000/api/products/${id}`)
     if (typeof data._id === "undefined") {
         document.querySelector('.item').innerHTML = "Le produit n'existe pas"
     } else {
-    let img = document.getElementsByClassName("item__img")[0];
+    const img = document.getElementsByClassName("item__img")[0]
     img.innerHTML = `<img src="${data.imageUrl}" alt="${data.altTxt}">`
 
-    let name = document.getElementById("title");
+    const name = document.getElementById("title")
     name.innerHTML = data.name
     
-    let price = document.getElementById("price");
+    const price = document.getElementById("price")
     price.innerHTML = data.price
 
-    let description = document.getElementById("description");
+    const description = document.getElementById("description")
     description.innerHTML = data.description
 
-    let colors = document.getElementById("colors");
-    let myHTML = `<option value="">--SVP, choisissez une couleur --</option>`
+    const colors = document.getElementById("colors")
+    let colorValue = `<option value="">--SVP, choisissez une couleur --</option>`
 
     for (let i = 0; i < data.colors.length; i++) {
-        myHTML += 
+        colorValue += 
         `<option value="${data.colors[i]}">${data.colors[i]}</option>`
     }
-
-    colors.innerHTML = myHTML
+    colors.innerHTML = colorValue
 }
 })
 
@@ -40,22 +41,23 @@ addToCart.addEventListener("click", () =>  {
     const quantity = parseInt(quantityValue || 0)
     const product = {id: id, color: color, quantity: quantity}
 
-    let iteminLocalStorage = localStorage.getItem("itemArr");
-    if (iteminLocalStorage == null) {
-        iteminLocalStorage = "[]"
+    let itemInLocalStorage = localStorage.getItem("itemArr")
+    if (itemInLocalStorage == null) {
+        itemInLocalStorage = "[]"
     }
-    if (color == "") {
+    if (color === "") {
         alert("Veuillez choisir une couleur")
     } else if (quantity <= 0 || quantity > 100 || quantity === null) {
         alert("Veuillez choisir une quantité entre 1 et 100")
+        document.getElementById("quantity").value = 1
     } else {
-        const itemArr = JSON.parse(iteminLocalStorage)
-        const indexOfItem = itemArr.findIndex((cartItem) => cartItem.id == id && cartItem.color == color)
-        console.log(indexOfItem)
+        const itemArr = JSON.parse(itemInLocalStorage)
+        const indexOfItem = itemArr.findIndex((Item) => Item.id === id && Item.color === color)
         if (indexOfItem >= 0) {
-            let newQuantity = itemArr[indexOfItem].quantity + quantity 
+            const newQuantity = itemArr[indexOfItem].quantity + quantity
             if (newQuantity > 100) {
-                alert("Limite de 100 produits atteint")
+                document.getElementById("quantity").value = 1
+                alert(`Limite de 100 produits maximum, ${itemArr[indexOfItem].quantity} produits dans le panier`)
             } else {
                 itemArr[indexOfItem].quantity = newQuantity
             }

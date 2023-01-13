@@ -1,12 +1,16 @@
+let itemArr = JSON.parse(window.localStorage.getItem("itemArr"))
+if (itemArr === null) {
+    window.localStorage.setItem("itemArr", "[]")
+}
+
 reload()
 
+// call or recall all the promises and display the result with the createCartItem function
 function reload() {
-    let itemArr = JSON.parse(window.localStorage.getItem("itemArr")) || [];
-    itemArr = itemArr.sort((a, b) => {
-        if (a.id < b.id) {
-            return -1;
-        }
-    });
+    let itemArr = JSON.parse(window.localStorage.getItem("itemArr"))
+    if (itemArr.length === 0 ) {
+        document.querySelector("#cartAndFormContainer>h1").innerHTML = "Votre panier est vide"
+    }
 
     const fetches = itemArr.map((item) => {
         return fetch(`http://localhost:3000/api/products/${item.id}`)
@@ -32,6 +36,7 @@ function reload() {
     })
 }
 
+// Create the html part for each items called in reload function
 function createCartItem(item, index) {
     
     const article = document.createElement("article")
@@ -65,7 +70,7 @@ function createCartItem(item, index) {
     })
 
     article.querySelector(`#itemQuantity-${index}`).addEventListener("change", (event) => {
-        let array = JSON.parse(window.localStorage.getItem("itemArr"));
+        let array = JSON.parse(window.localStorage.getItem("itemArr"))
         const indexOfItem = array.findIndex((cartItem) => cartItem.id == item.id && cartItem.color == item.color)
         const quantityValue = document.getElementById(`itemQuantity-${index}`).value
         const newQuantity = parseInt(quantityValue || 0)
@@ -81,7 +86,7 @@ function createCartItem(item, index) {
     return article
 }
 
-
+// return an array without the product clicked in createCartItem function
 function deleteProductInCart(itemid, itemColor) {
     var array = JSON.parse(window.localStorage.getItem("itemArr"));
     array = array.filter((item) => {
@@ -90,17 +95,17 @@ function deleteProductInCart(itemid, itemColor) {
     window.localStorage.setItem("itemArr", JSON.stringify(array))
 }
 
-deleteProductInCart()
-
-function totalQty (array) {
-    const sum = array.reduce((accumulator, object) => {
+// return and display the sum of the item quantity
+function totalQty (item) {
+    const sum = item.reduce((accumulator, object) => {
         return accumulator + object.quantity;
         }, 0);
             document.getElementById("totalQuantity").innerText = sum
         }
 
-function totalPrice (array) {
-    const sum = array.reduce((accumulator, object) => {
+// return and display the sum of the price multiplied by their item quantity
+function totalPrice (item) {
+    const sum = item.reduce((accumulator, object) => {
         return accumulator + (object.quantity * object.data.price);
         }, 0);
         document.getElementById("totalPrice").innerText = sum
@@ -112,7 +117,7 @@ const firstNameError = document.getElementById('firstNameErrorMsg')
 // check if the input value is empty, check if the value match the regex, if false, display an error message, if true, return the checked value
 function checkFisrtName (elt, eltError, regex) {
     if (elt.value === "") {
-        eltError.innerHTML = "";
+        eltError.innerHTML = "Veuillez remplir le champ";
         return;
     }
     if (regex.test(elt.value) === false) {
@@ -199,36 +204,21 @@ function checkEmail (elt, eltError, regex) {
     } 
 }
 
-// Get the submit button element
 const submitBtn = document.getElementById('order')
 
-// Add a click event listener to the submit button
 submitBtn.addEventListener("click", (e) => {
-    // Prevent the default action of the submit button (e.g. submitting a form)
     e.preventDefault()
-
-    // Get the product array from local storage
     product = JSON.parse(window.localStorage.getItem("itemArr"))
 
-    // Check if the product array is empty
     if (product.length === 0) {
-        // Prevent the default action if the product array is empty
-        e.preventDefault()
-        // Display an alert to the user
         alert("Votre panier est vide")
     } else {
-        // Get the first name value and check if it is valid
         const firstNameValue = checkFisrtName(firstName, firstNameError, regexName)
-        // Get the last name value and check if it is valid
         const lastNameValue = checkLastName(lastName, lastNameError, regexName)
-        // Get the address value and check if it is valid
         const addressValue = checkAddress(address, addressError, regexAddress)
-        // Get the city value and check if it is valid
         const cityValue = checkCity(city, cityError, regexCity)
-        // Get the email value and check if it is valid
         const emailValue = checkEmail(email, emailError, regexEmail)
 
-        // Create the contact object with the valid values
         const contact = {
             firstName : firstNameValue,
             lastName : lastNameValue,
@@ -237,51 +227,30 @@ submitBtn.addEventListener("click", (e) => {
             email : emailValue
         }
 
-        // Check if any of the fields in the contact object are invalid (i.e. falsy values)
+        const productsValue = product.map(element => element.id)
+        const products = removeDuplicates(productsValue)
+
         if (!firstNameValue || !lastNameValue || !addressValue || !cityValue || !emailValue) {
-            // Return if the contact object is invalid
             return;
         }
 
-        // Get the unique product IDs
-        const productsValue = getIdValues(product)
-        const products = removeDuplicates(productsValue)
-
-        // Stringify the contact and products objects for the POST request
         postData = JSON.stringify({contact, products})
         
-        // Make a POST request to the server with the contact and products data
         fetch('http://localhost:3000/api/products/order', {
-            method: "POST", // Set the request method to POST
+            method: "POST",
             headers: {
-                "Content-Type": "application/json", // Set the content type to JSON
+                "Content-Type": "application/json",
             },
-            body: postData // Set the request body to the stringified data
+            body: postData
         })
-        // Parse the response as JSON
         .then((res) => res.json())
-        // Use the response data to redirect the user to the confirmation page
         .then((data) => {
-            // remove the key "itemArr" from the local storage
-            localStorage.removeItem('itemArr');
-            // Create the confirmation URL with the order ID
-            let confirmationUrl = "./confirmation.html?id=" + data.orderId;
-            // Redirect the user to the confirmation page
-            window.location.href = confirmationUrl;
+            confirmUrl = "./confirmation.html?id=" + data.orderId;
+            localStorage.removeItem('itemArr')
+            window.location.href = confirmUrl;
         })
     }
 })
-
-// exctract the Id values of each object and put it in a new array
-function getIdValues(objectsArray) {
-    idValues = [];
-    for (let item of objectsArray) {
-    idValues.push(item.id);
-    }
-    return idValues;
-}
-
-objectsArray.map(element => element.id)
 
 // removes the duplicates values of an Array
 function removeDuplicates(array) {
