@@ -9,27 +9,30 @@ fetch(`http://localhost:3000/api/products/${id}`)
     if (typeof data._id === "undefined") {
         document.querySelector('.item').innerHTML = "Le produit n'existe pas"
     } else {
-    const img = document.getElementsByClassName("item__img")[0]
-    img.innerHTML = `<img src="${data.imageUrl}" alt="${data.altTxt}">`
+    const imgDiv = document.querySelector(".item__img")
+    const img = document.createElement("img")
+    img.src = data.imageUrl
+    img.alt = data.altTxt
+    imgDiv.appendChild(img)
 
     const name = document.getElementById("title")
-    name.innerHTML = data.name
+    name.textContent = data.name
     
     const price = document.getElementById("price")
-    price.innerHTML = data.price
+    price.textContent = data.price
 
     const description = document.getElementById("description")
-    description.innerHTML = data.description
+    description.textContent = data.description
 
     const colors = document.getElementById("colors")
-    let colorValue = `<option value="">--SVP, choisissez une couleur --</option>`
-
+    
     for (let i = 0; i < data.colors.length; i++) {
-        colorValue += 
-        `<option value="${data.colors[i]}">${data.colors[i]}</option>`
+        let option = document.createElement("option")
+        option.value = data.colors[i]
+        option.textContent = data.colors[i]
+        colors.appendChild(option)
+        }
     }
-    colors.innerHTML = colorValue
-}
 })
 
 const addToCart = document.getElementById("addToCart")
